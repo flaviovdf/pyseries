@@ -1,4 +1,4 @@
 pyseries
 ========
 
-pyseries - Time series and prediction in Python
+pyseries - Time series data mining and prediction in Python

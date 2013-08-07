@@ -74,9 +74,7 @@ def get_extensions():
 if __name__ == "__main__":
     packages = get_packages()
     extensions = get_extensions()
-    setup(
-        cmdclass = {'build_ext': build_ext},
-        name             = 'pyseries',
-        packages         = packages,
-        ext_modules      = extensions
-      )
+    setup(cmdclass = {'build_ext': build_ext},
+            name             = 'pyseries',
+            packages         = packages,
+            ext_modules      = extensions)

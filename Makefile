@@ -14,7 +14,7 @@ clean:
 	find . -name "*.c" | xargs rm -f
 	find . -name "*.so" | xargs rm -f
 
-test: clean build
+test:
 	$(NOSETESTS)
 
 trailing-spaces: 

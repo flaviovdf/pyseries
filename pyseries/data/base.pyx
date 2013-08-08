@@ -11,8 +11,11 @@ used to manipulated time series datasets:
     * TimeSeriesDataset : Dataset for of various time series
 '''
 
-from ..exceptions import DataFormatException
-from ..exceptions import ParameterException
+from pyseries.exceptions import DataFormatException
+from pyseries.exceptions import ParameterException
+
+import numpy as np
+cimport numpy as np
 
 cdef inline int TRUE = 1
 cdef inline int FALSE = 0
@@ -33,7 +36,7 @@ cdef int check_unique_sorted(double[:] array) nogil:
 
     return TRUE
 
-cdef int bin_search_pos(double[:] array, double value) nogil:
+cdef Py_ssize_t bin_search_pos(double[:] array, double value) nogil:
     '''
     Finds the first element in the array where the given is OR should have been
     in the given array. This is simply a binary search, but if the element is
@@ -46,10 +49,10 @@ cdef int bin_search_pos(double[:] array, double value) nogil:
     cdef Py_ssize_t lower = 0
     cdef Py_ssize_t upper = n - 1 #closed interval
     
-    cdef Py_ssize_t half
+    cdef Py_ssize_t half = 0
     cdef Py_ssize_t idx = -1 
     while upper >= lower:
-        half = lower + ((lower - upper) // 2)
+        half = lower + ((upper - lower) // 2)
         if value == array[half]:
             idx = half
             break
@@ -88,7 +91,7 @@ cdef class TimeSeries(object):
         self.timestamps = timestamps
         self.size = data.shape[0]
 
-    cdef TimeSeries filter_upper(self, double timestamp):
+    cpdef TimeSeries filter_upper(self, double timestamp):
         '''
         Creates a new TimeSeries object with the elements which exist from 
         (open interval) a given date.
@@ -98,10 +101,10 @@ cdef class TimeSeries(object):
         timestamp : double
             Date to filter
         '''
-        cdef Py_ssize_t idx = bin_search_pos(self.data, timestamp)
+        cdef Py_ssize_t idx = bin_search_pos(self.timestamps, timestamp)
         return TimeSeries(self.data[idx:], self.timestamps[idx:])
 
-    cdef TimeSeries filter_lower(self, double timestamp):
+    cpdef TimeSeries filter_lower(self, double timestamp):
         '''
         Creates a new TimeSeries object with the elements which exist up to
         (open interval) a given date.
@@ -111,10 +114,10 @@ cdef class TimeSeries(object):
         timestamp : double
             Date to filter
         '''
-        cdef Py_ssize_t idx = bin_search_pos(self.data, timestamp)
+        cdef Py_ssize_t idx = bin_search_pos(self.timestamps, timestamp)
         return TimeSeries(self.data[:idx], self.timestamps[:idx])
 
-    cdef TimeSeries filter_mid(self, double lowerstamp, double upperstamp):
+    cpdef TimeSeries filter_mid(self, double lowerstamp, double upperstamp):
         '''
         Creates a new TimeSeries object with elements which exist from (closed)
         a given up to (open) a given date.
@@ -156,11 +159,43 @@ cdef class TimeSeriesDataset(object):
     def __getitem__(self, Py_ssize_t idx):
         return self.series[idx]
 
-    cdef double[::1] np_like_firstn(self):
-        return None
+    cpdef cnp.ndarray[double, ndim=2] np_like_firstn(self):
+        '''
+        Converts the time series dataset to a numpy array of
+        2 dimensions. Since time series may have different shapes,
+        only the first n elements are used, where n is the size of the
+        smallest series.
+        '''
+        cdef cnp.ndarray[double, ndim=2] return_val = \
+                cnp.ndarray(shape=(self.num_series, self.min_size))
+        
+        cdef TimeSeries time_series
+        cdef Py_ssize_t i
 
-    cdef double[::1] np_like_lastn(self):
-        return None
+        for i from 0 <= i < self.num_series:
+            time_series = self.series[i]
+            return_val[i] = time_series.data[:self.min_size]
 
-    cdef double[::1] np_like_round_peak(self, Py_ssize_t peak_round):
-        return None
+        return return_val
+
+    cpdef cnp.ndarray[double, ndim=2] np_like_lastn(self):
+        '''
+        Converts the time series dataset to a numpy array of
+        2 dimensions. Since time series may have different shapes,
+        only the last n elements are used, where n is the size of the
+        largest series.
+        '''
+
+        cdef cnp.ndarray[double, ndim=2] return_val = \
+                cnp.ndarray(shape=(self.num_series, self.min_size))
+        
+        cdef Py_ssize_t start_idx
+        cdef TimeSeries time_series
+        cdef Py_ssize_t i
+
+        for i from 0 <= i < self.num_series:
+            time_series = self.series[i]
+            start_idx = time_series.data.shape[0] - self.min_size
+            return_val[i] = time_series.data[start_idx:]
+
+        return return_val

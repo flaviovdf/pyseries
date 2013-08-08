@@ -14,3 +14,7 @@ class ShapeException(DataFormatException):
     Thrown when numpy arrays have incompatible shapes for a given operation.
     '''
     pass
+
+class ParameterException(Exception):
+    '''Indicates a wrong parameter for a given function'''
+    pass

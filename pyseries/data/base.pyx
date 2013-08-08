@@ -12,9 +12,16 @@ used to manipulated time series datasets:
 '''
 
 from ..exceptions import DataFormatException
+from ..exceptions import ParameterException
 
 cdef inline int TRUE = 1
 cdef inline int FALSE = 0
+
+cdef inline Py_ssize_t smax(Py_ssize_t first, Py_ssize_t second):
+    return first if first >= second else second
+
+cdef inline Py_ssize_t smin(Py_ssize_t first, Py_ssize_t second):
+    return first if first < second else second
 
 cdef int check_unique_sorted(double[:] array) nogil:
     '''Checks if the given array is sorted'''
@@ -71,11 +78,15 @@ cdef class TimeSeries(object):
     '''
 
     def __init__(self, double[:] data, double[:] timestamps):
-        self.data = data
-        self.timestamps = timestamps
-        
         if check_unique_sorted(timestamps) == FALSE:
             raise DataFormatException('Timestamps must be sorted and unique')
+
+        if data.shape[0] != timestamps.shape[0]:
+            raise ParameterException('Arrays must have the same shape')
+
+        self.data = data
+        self.timestamps = timestamps
+        self.size = data.shape[0]
 
     cdef TimeSeries filter_upper(self, double timestamp):
         '''
@@ -119,6 +130,13 @@ cdef class TimeSeries(object):
         cdef Py_ssize_t upper = bin_search_pos(self.data, upperstamp)
         return TimeSeries(self.data[lower:upper], self.timestamps[lower:upper])
 
+    cdef Py_ssize_t size(self):
+        '''Get's the number of elements in this time series'''
+        return self.size
+
+    def __len__(self):
+        return self.size
+
 cdef class TimeSeriesDataset(object):
     '''
     Represents a dataset with multiple time series. Each individual time series
@@ -127,10 +145,22 @@ cdef class TimeSeriesDataset(object):
     def __init__(self, TimeSeries[:] series):
         self.series = series
         self.num_series = series.shape[0]
+        self.max_size = 0
+        self.min_size = 0
+
+        cdef Py_ssize_t i
+        for i from 0 <= i < series.shape[0]:
+            self.max_size = smax(self.max_size, series.size())
+            self.min_size = smin(self.min_size, series.size())
 
     def __getitem__(self, Py_ssize_t idx):
         return self.series[idx]
-    
-    cdef double[::1] to_numpy_like_data(self, str heuristic):
 
+    cdef double[::1] np_like_firstn(self):
+        return None
+
+    cdef double[::1] np_like_lastn(self):
+        return None
+
+    cdef double[::1] np_like_round_peak(self, Py_ssize_t peak_round):
         return None

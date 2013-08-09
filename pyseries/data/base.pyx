@@ -48,23 +48,29 @@ cdef Py_ssize_t bin_search_pos(double[:] array, double value) nogil:
     cdef Py_ssize_t n = array.shape[0]
     cdef Py_ssize_t lower = 0
     cdef Py_ssize_t upper = n - 1 #closed interval
-    
     cdef Py_ssize_t half = 0
     cdef Py_ssize_t idx = -1 
-    while upper >= lower:
-        half = lower + ((upper - lower) // 2)
-        if value == array[half]:
-            idx = half
-            break
-        elif value > array[half]:
-            lower = half + 1
-        else:
-            upper = half - 1
+ 
+    #Corner cases right outside the array. Return where it should be
+    if value < array[0]:
+        return lower
+    elif value > array[n - 1]:
+        return n
+    else:
+        while upper >= lower:
+            half = lower + ((upper - lower) // 2)
+            if value == array[half]:
+                idx = half
+                break
+            elif value > array[half]:
+                lower = half + 1
+            else:
+                upper = half - 1
     
-    if idx == -1: #Element not found, return where it should be
-        idx = lower - 1
+        if idx == -1: #Element not found, return where it should be
+            idx = lower - 1
 
-    return idx
+        return idx
 
 cdef class TimeSeries(object):
     '''
@@ -72,23 +78,23 @@ cdef class TimeSeries(object):
 
     Parameters
     ----------
-    data : array like of double
-        data of the time series
     timestamps : array like of double
         time stamp (in seconds since epoch) for each event. This array must
         be sorted and unique. An exception is thrown if either conditions are
         not met.
+    data : array like of double
+        data of the time series
     '''
 
-    def __init__(self, double[:] data, double[:] timestamps):
+    def __init__(self, double[:] timestamps, double[:] data):
         if check_unique_sorted(timestamps) == FALSE:
             raise DataFormatException('Timestamps must be sorted and unique')
 
         if data.shape[0] != timestamps.shape[0]:
             raise ParameterException('Arrays must have the same shape')
 
-        self.data = data
         self.timestamps = timestamps
+        self.data = data
         self.size = data.shape[0]
 
     cpdef TimeSeries filter_upper(self, double timestamp):
@@ -129,8 +135,8 @@ cdef class TimeSeries(object):
         upperstamp : double
             Upper date
         '''
-        cdef Py_ssize_t lower = bin_search_pos(self.data, lowerstamp)
-        cdef Py_ssize_t upper = bin_search_pos(self.data, upperstamp)
+        cdef Py_ssize_t lower = bin_search_pos(self.timestamps, lowerstamp)
+        cdef Py_ssize_t upper = bin_search_pos(self.timestamps, upperstamp)
         return TimeSeries(self.data[lower:upper], self.timestamps[lower:upper])
 
     cdef Py_ssize_t size(self):

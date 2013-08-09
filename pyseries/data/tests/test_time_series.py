@@ -5,7 +5,6 @@ Tests for the base datasets module.
 '''
 
 from pyseries.data.base import TimeSeries
-from pyseries.data.base import TimeSeriesDataset
 
 from pyseries.exceptions import DataFormatException
 from pyseries.exceptions import ParameterException

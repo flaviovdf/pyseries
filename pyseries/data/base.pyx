@@ -36,7 +36,7 @@ cdef int check_unique_sorted(double[:] array) nogil:
 
     return TRUE
 
-cdef Py_ssize_t bin_search_pos(double[:] array, double value):
+cdef Py_ssize_t bin_search_pos(double[:] array, double value) nogil:
     '''
     Finds the first element in the array where the given is OR should have been
     in the given array. This is simply a binary search, but if the element is
@@ -143,10 +143,6 @@ cdef class TimeSeries(object):
         cdef Py_ssize_t upper = bin_search_pos(self.timestamps, upperstamp)
         return TimeSeries(self.timestamps[lower:upper], self.data[lower:upper])
 
-    cdef Py_ssize_t size(self):
-        '''Get's the number of elements in this time series'''
-        return self.size
-
     def __len__(self):
         return self.size
 
@@ -159,12 +155,14 @@ cdef class TimeSeriesDataset(object):
         self.series = series
         self.num_series = series.shape[0]
         self.max_size = 0
-        self.min_size = 0
 
         cdef Py_ssize_t i
         for i from 0 <= i < series.shape[0]:
-            self.max_size = smax(self.max_size, series.size())
-            self.min_size = smin(self.min_size, series.size())
+            self.max_size = smax(self.max_size, series[i].size)
+        
+        self.min_size = self.max_size
+        for i from 0 <= i < series.shape[0]:
+            self.min_size = smin(self.min_size, series[i].size)
 
     def __getitem__(self, Py_ssize_t idx):
         return self.series[idx]

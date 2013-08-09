@@ -36,7 +36,7 @@ cdef int check_unique_sorted(double[:] array) nogil:
 
     return TRUE
 
-cdef Py_ssize_t bin_search_pos(double[:] array, double value) nogil:
+cdef Py_ssize_t bin_search_pos(double[:] array, double value):
     '''
     Finds the first element in the array where the given is OR should have been
     in the given array. This is simply a binary search, but if the element is
@@ -51,26 +51,20 @@ cdef Py_ssize_t bin_search_pos(double[:] array, double value) nogil:
     cdef Py_ssize_t half = 0
     cdef Py_ssize_t idx = -1 
  
-    #Corner cases right outside the array. Return where it should be
-    if value < array[0]:
-        return lower
-    elif value > array[n - 1]:
-        return n
-    else:
-        while upper >= lower:
-            half = lower + ((upper - lower) // 2)
-            if value == array[half]:
-                idx = half
-                break
-            elif value > array[half]:
-                lower = half + 1
-            else:
-                upper = half - 1
+    while upper >= lower:
+        half = lower + ((upper - lower) // 2)
+        if value == array[half]:
+            idx = half
+            break
+        elif value > array[half]:
+            lower = half + 1
+        else:
+            upper = half - 1
     
-        if idx == -1: #Element not found, return where it should be
-            idx = lower - 1
+    if idx == -1: #Element not found, return where it should be
+        idx = lower
 
-        return idx
+    return idx
 
 cdef class TimeSeries(object):
     '''
@@ -108,7 +102,7 @@ cdef class TimeSeries(object):
             Date to filter
         '''
         cdef Py_ssize_t idx = bin_search_pos(self.timestamps, timestamp)
-        return TimeSeries(self.data[idx:], self.timestamps[idx:])
+        return TimeSeries(self.timestamps[idx:], self.data[idx:])
 
     cpdef TimeSeries filter_lower(self, double timestamp):
         '''
@@ -121,7 +115,7 @@ cdef class TimeSeries(object):
             Date to filter
         '''
         cdef Py_ssize_t idx = bin_search_pos(self.timestamps, timestamp)
-        return TimeSeries(self.data[:idx], self.timestamps[:idx])
+        return TimeSeries(self.timestamps[:idx], self.data[:idx])
 
     cpdef TimeSeries filter_mid(self, double lowerstamp, double upperstamp):
         '''
@@ -137,7 +131,7 @@ cdef class TimeSeries(object):
         '''
         cdef Py_ssize_t lower = bin_search_pos(self.timestamps, lowerstamp)
         cdef Py_ssize_t upper = bin_search_pos(self.timestamps, upperstamp)
-        return TimeSeries(self.data[lower:upper], self.timestamps[lower:upper])
+        return TimeSeries(self.timestamps[lower:upper], self.data[lower:upper])
 
     cdef Py_ssize_t size(self):
         '''Get's the number of elements in this time series'''
@@ -165,15 +159,15 @@ cdef class TimeSeriesDataset(object):
     def __getitem__(self, Py_ssize_t idx):
         return self.series[idx]
 
-    cpdef cnp.ndarray[double, ndim=2] np_like_firstn(self):
+    cpdef np.ndarray[double, ndim=2] np_like_firstn(self):
         '''
         Converts the time series dataset to a numpy array of
         2 dimensions. Since time series may have different shapes,
         only the first n elements are used, where n is the size of the
         smallest series.
         '''
-        cdef cnp.ndarray[double, ndim=2] return_val = \
-                cnp.ndarray(shape=(self.num_series, self.min_size))
+        cdef np.ndarray[double, ndim=2] return_val = \
+                np.ndarray(shape=(self.num_series, self.min_size))
         
         cdef TimeSeries time_series
         cdef Py_ssize_t i
@@ -184,7 +178,7 @@ cdef class TimeSeriesDataset(object):
 
         return return_val
 
-    cpdef cnp.ndarray[double, ndim=2] np_like_lastn(self):
+    cpdef np.ndarray[double, ndim=2] np_like_lastn(self):
         '''
         Converts the time series dataset to a numpy array of
         2 dimensions. Since time series may have different shapes,
@@ -192,8 +186,8 @@ cdef class TimeSeriesDataset(object):
         largest series.
         '''
 
-        cdef cnp.ndarray[double, ndim=2] return_val = \
-                cnp.ndarray(shape=(self.num_series, self.min_size))
+        cdef np.ndarray[double, ndim=2] return_val = \
+                np.ndarray(shape=(self.num_series, self.min_size))
         
         cdef Py_ssize_t start_idx
         cdef TimeSeries time_series

@@ -1,7 +1,9 @@
 # -*- coding: utf8
 from __future__ import division, print_function
 
-cimport numpy as cnp
+import numpy as np
+cimport numpy as np
+np.import_array()
 
 cdef class TimeSeries(object):
     
@@ -21,5 +23,5 @@ cdef class TimeSeriesDataset(object):
     cpdef readonly Py_ssize_t min_size
     cpdef readonly Py_ssize_t max_size
 
-    cpdef cnp.ndarray[double, ndim=2] np_like_firstn(self)
-    cpdef cnp.ndarray[double, ndim=2] np_like_lastn(self)
+    cpdef np.ndarray[double, ndim=2] np_like_firstn(self)
+    cpdef np.ndarray[double, ndim=2] np_like_lastn(self)

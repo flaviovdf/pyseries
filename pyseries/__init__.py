@@ -9,3 +9,6 @@ my PhD research in the need to implement multiple baseline methods for
 popularity prediction.
 '''
 __version__ = '0.01-git'
+
+from pyseries.data.base import TimeSeries
+from pyseries.data.base import TimeSeriesDataset

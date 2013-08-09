@@ -7,8 +7,8 @@ np.import_array()
 
 cdef class TimeSeries(object):
     
-    cdef readonly double[:] timestamps
-    cdef readonly double[:] data
+    cdef double[:] timestamps
+    cdef double[:] data
     cdef readonly Py_ssize_t size
 
     cpdef TimeSeries filter_lower(self, double timestamp)

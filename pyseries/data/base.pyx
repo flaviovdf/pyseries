@@ -87,9 +87,19 @@ cdef class TimeSeries(object):
         if data.shape[0] != timestamps.shape[0]:
             raise ParameterException('Arrays must have the same shape')
 
-        self.timestamps = timestamps
-        self.data = data
+        self.timestamps = np.asarray(timestamps)
+        self.data = np.asarray(data)
         self.size = data.shape[0]
+
+    property data:
+        '''Gets the data as a numpy array'''
+        def __get__(self):
+            return np.asarray(self.data)
+
+    property timestamps:
+        '''Gets the data as a numpy array'''
+        def __get__(self):
+            return np.asarray(self.timestamps)
 
     cpdef TimeSeries filter_upper(self, double timestamp):
         '''

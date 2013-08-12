@@ -31,3 +31,21 @@ def test_to_numpy():
     
     X = dataset.np_like_lastn()
     assert_array_equal(X, [[1.0, 2, 3, 4, 5], [2, 3, 4, 8, 6]])
+
+
+def test_to_empty():
+    '''Valid empty creation test'''
+
+    idx1 = np.array([], dtype='d')
+    data1 = np.array([], dtype='d')
+    
+    ts1 = TimeSeries(idx1, data1)
+    ts2 = TimeSeries(idx1.copy(), data1.copy())
+
+    dataset = TimeSeriesDataset(np.asarray([ts1, ts2]))
+
+    X = dataset.np_like_firstn()
+    assert_array_equal(X, [[], []])
+    
+    X = dataset.np_like_lastn()
+    assert_array_equal(X, [[], []])

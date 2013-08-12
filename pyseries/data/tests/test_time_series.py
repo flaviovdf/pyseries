@@ -87,6 +87,53 @@ def test_filter_lower():
         if i < ts.timestamps.shape[0]:
             expected.append(ts.timestamps[i])
 
+def test_filter_lower_pair():
+    '''Tests with pair shape arrays'''
+
+    idx = np.array([], dtype='d')
+    data = np.array([], dtype='d')
+    ts = TimeSeries(idx, data)
+
+    result = ts.filter_lower(1)
+    assert_array_equal(result.data, [])
+    assert_array_equal(result.timestamps, [])
+    
+    idx = np.array([1, 2, 3, 4, 5, 6], dtype='d')
+    data = np.array([1, 2, 3, 4, 5, 6], dtype='d')
+    ts = TimeSeries(idx, data)
+
+    result = ts.filter_lower(1)
+    assert_array_equal(result.data, [])
+    assert_array_equal(result.timestamps, [])
+    
+    result = ts.filter_lower(0)
+    assert_array_equal(result.data, [])
+    assert_array_equal(result.timestamps, [])
+    
+    result = ts.filter_lower(2)
+    assert_array_equal(result.data, [1])
+    assert_array_equal(result.timestamps, [1])
+    
+    result = ts.filter_lower(2.5)
+    assert_array_equal(result.data, [1, 2])
+    assert_array_equal(result.timestamps, [1, 2])
+    
+    result = ts.filter_lower(5)
+    assert_array_equal(result.data, [1, 2, 3, 4])
+    assert_array_equal(result.timestamps, [1, 2, 3, 4])
+    
+    result = ts.filter_lower(3.5)
+    assert_array_equal(result.data, [1, 2, 3])
+    assert_array_equal(result.timestamps, [1, 2, 3])
+    
+    result = ts.filter_lower(5.5)
+    assert_array_equal(result.data, [1, 2, 3, 4, 5])
+    assert_array_equal(result.timestamps, [1, 2, 3, 4, 5])
+    
+    result = ts.filter_lower(6.5)
+    assert_array_equal(result.data, [1, 2, 3, 4, 5, 6])
+    assert_array_equal(result.timestamps, [1, 2, 3, 4, 5, 6])
+ 
 def test_filter_upper():
     '''Tests the upper filter'''
 

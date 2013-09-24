@@ -7,14 +7,13 @@ np.import_array()
 
 cdef class TimeSeries(object):
     
-    cdef double[:] timestamps
-    cdef double[:] data
-    cdef readonly Py_ssize_t size
+    cdef double[:] _timestamps
+    cdef double[:] _data
+    cdef Py_ssize_t _size
 
     cpdef TimeSeries filter_lower(self, double timestamp)
     cpdef TimeSeries filter_upper(self, double timestamp)
     cpdef TimeSeries filter_mid(self, double lowerstamp, double upperstamp)
-    cdef Py_ssize_t size(self)
 
 cdef class TimeSeriesDataset(object):
     

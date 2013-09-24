@@ -87,19 +87,19 @@ cdef class TimeSeries(object):
         if data.shape[0] != timestamps.shape[0]:
             raise ParameterException('Arrays must have the same shape')
 
-        self.timestamps = np.asarray(timestamps)
-        self.data = np.asarray(data)
-        self.size = data.shape[0]
+        self._timestamps = np.asarray(timestamps)
+        self._data = np.asarray(data)
+        self._size = data.shape[0]
 
     property data:
         '''Gets the data as a numpy array'''
         def __get__(self):
-            return np.asarray(self.data)
+            return np.asarray(self._data)
 
     property timestamps:
         '''Gets the data as a numpy array'''
         def __get__(self):
-            return np.asarray(self.timestamps)
+            return np.asarray(self._timestamps)
 
     cpdef TimeSeries filter_upper(self, double timestamp):
         '''
@@ -111,8 +111,8 @@ cdef class TimeSeries(object):
         timestamp : double
             Date to filter
         '''
-        cdef Py_ssize_t idx = bin_search_pos(self.timestamps, timestamp)
-        return TimeSeries(self.timestamps[idx:], self.data[idx:])
+        cdef Py_ssize_t idx = bin_search_pos(self._timestamps, timestamp)
+        return TimeSeries(self._timestamps[idx:], self._data[idx:])
 
     cpdef TimeSeries filter_lower(self, double timestamp):
         '''
@@ -124,8 +124,8 @@ cdef class TimeSeries(object):
         timestamp : double
             Date to filter
         '''
-        cdef Py_ssize_t idx = bin_search_pos(self.timestamps, timestamp)
-        return TimeSeries(self.timestamps[:idx], self.data[:idx])
+        cdef Py_ssize_t idx = bin_search_pos(self._timestamps, timestamp)
+        return TimeSeries(self._timestamps[:idx], self._data[:idx])
 
     cpdef TimeSeries filter_mid(self, double lowerstamp, double upperstamp):
         '''
@@ -139,9 +139,9 @@ cdef class TimeSeries(object):
         upperstamp : double
             Upper date
         '''
-        cdef Py_ssize_t lower = bin_search_pos(self.timestamps, lowerstamp)
-        cdef Py_ssize_t upper = bin_search_pos(self.timestamps, upperstamp)
-        return TimeSeries(self.timestamps[lower:upper], self.data[lower:upper])
+        cdef Py_ssize_t lower = bin_search_pos(self._timestamps, lowerstamp)
+        cdef Py_ssize_t upper = bin_search_pos(self._timestamps, upperstamp)
+        return TimeSeries(self._timestamps[lower:upper], self._data[lower:upper])
 
     def __len__(self):
         return self.size
@@ -158,11 +158,11 @@ cdef class TimeSeriesDataset(object):
 
         cdef Py_ssize_t i
         for i from 0 <= i < series.shape[0]:
-            self.max_size = smax(self.max_size, series[i].size)
+            self.max_size = smax(self.max_size, series[i]._size)
         
         self.min_size = self.max_size
         for i from 0 <= i < series.shape[0]:
-            self.min_size = smin(self.min_size, series[i].size)
+            self.min_size = smin(self.min_size, series[i]._size)
 
     def __getitem__(self, Py_ssize_t idx):
         return self.series[idx]
@@ -182,7 +182,7 @@ cdef class TimeSeriesDataset(object):
 
         for i from 0 <= i < self.num_series:
             time_series = self.series[i]
-            return_val[i] = time_series.data[:self.min_size]
+            return_val[i] = time_series._data[:self.min_size]
 
         return return_val
 
@@ -204,6 +204,6 @@ cdef class TimeSeriesDataset(object):
         for i from 0 <= i < self.num_series:
             time_series = self.series[i]
             start_idx = time_series.data.shape[0] - self.min_size
-            return_val[i] = time_series.data[start_idx:]
+            return_val[i] = time_series._data[start_idx:]
 
         return return_val

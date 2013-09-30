@@ -44,7 +44,8 @@ class SSM(BaseEstimator, RegressorMixin):
             model = Model(self.normalize_err)
             fmin_l_bfgs_b(func=model, x0=init_params,
                     approx_grad=True, bounds=bounds,
-                    args=(X[i], self.trend, self.period))
+                    args=(X[i], self.trend, self.period),
+                    iprint=-1)
             for _ in xrange(self.n_walks):
                 y = np.asarray(model.walk(self.steps_ahead))
                 Y[i] += y

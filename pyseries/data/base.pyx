@@ -144,7 +144,7 @@ cdef class TimeSeries(object):
         return TimeSeries(self._timestamps[lower:upper], self._data[lower:upper])
 
     def __len__(self):
-        return self.size
+        return self._size
 
 cdef class TimeSeriesDataset(object):
     '''
@@ -163,6 +163,9 @@ cdef class TimeSeriesDataset(object):
         self.min_size = self.max_size
         for i from 0 <= i < series.shape[0]:
             self.min_size = smin(self.min_size, series[i]._size)
+
+    def __iter__(self):
+        return iter(self.series)
 
     def __getitem__(self, Py_ssize_t idx):
         return self.series[idx]

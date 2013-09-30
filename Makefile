@@ -3,9 +3,7 @@
 PYTHON ?= python
 NOSETESTS ?= nosetests
 
-all: clean build
-
-build:
+all:
 	$(PYTHON) setup.py build_ext --inplace
 
 clean:

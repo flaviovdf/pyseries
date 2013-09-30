@@ -13,7 +13,6 @@ Also defines error metrics for prediction:
     * MSE
     * MRSE
     * MAE
-    * Time-to-Surprise-Peak
     * Time-to-Peak
     * Growth-to-Peak / Peak
     * Fraction of remaining views

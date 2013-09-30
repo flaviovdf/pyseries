@@ -7,12 +7,13 @@ only wrappers to sklearn models.
 
 import numpy as np
 
-from ..exceptions import ParameterException
-from ..exceptions import ShapeException
+from pyseries.data.base import TimeSeriesDataset
 
-from scipy.spatial.distance import pdist
+from pyseries.exceptions import ParameterException
+from pyseries.exceptions import ShapeException
 
-from sklearn.base import clone
+from scipy.spatial.distance import cdist
+
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
 
@@ -78,13 +79,15 @@ class RidgeRBFModel(BaseEstimator, RegressorMixin):
         self.R = None
         self.model = None
 
-    def fit(X, y):
-        X = np.asanyarray(X, dtype='f')
-        y = np.asanyarray(y, dtype='f')
-        
-        X, y = mrse_transform(X, y)
+    def fit(self, X, y):
+        if isinstance(X, TimeSeriesDataset):
+            X = X.np_like_firstn() 
 
+        X = np.asanyarray(X, dtype='d')
+        y = np.asanyarray(y, dtype='d')
+        
         n = X.shape[0]
+        num_dists = self.num_dists
         
         if self.num_dists > n:
             raise ParameterException('Number of distances is greater than ' + \
@@ -93,19 +96,25 @@ class RidgeRBFModel(BaseEstimator, RegressorMixin):
         if self.num_dists <= 0:
             self.R = None
         else:
-            self.R = np.random.choice(X.shape[0], num_dists, replace=False)
-            D = np.exp(-pdist(X, self.R) / (2 * (self.sigma ** 2)))
+            rand_idx = np.random.choice(X.shape[0], num_dists, replace=False)
+            self.R = X[rand_idx]
+            
+            D = np.exp(-cdist(X, self.R) / (2 * (self.sigma ** 2)))
             X = np.hstack((X, D))
-        
+
+        X, y = mrse_transform(X, y)        
         self.model = Ridge(self.alpha, fit_intercept=False)
         self.model = self.model.fit(X, y)
         return self
 
-    def predict(X):
-        X = np.asanyarray(X, dtype='f')
+    def predict(self, X):
+        if isinstance(X, TimeSeriesDataset):
+            X = X.np_like_firstn()
+             
+        X = np.asanyarray(X, dtype='d')
 
         if self.R is not None:
-            D = np.exp(-pdist(X, self.R) / (2 * (self.sigma ** 2)))
+            D = np.exp(-cdist(X, self.R) / (2 * (self.sigma ** 2)))
             X = np.hstack((X, D))
 
         return self.model.predict(X)
@@ -116,4 +125,4 @@ class MLModel(RidgeRBFModel):
     '''
 
     def __init__(self):
-        super(RidgeRBFModel, self).__init__(0, 0, 1)
+        super(MLModel, self).__init__(0, 0, 1)

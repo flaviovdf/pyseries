@@ -123,4 +123,3 @@ def test_fit_predict_normalize():
     ssm = SSM(False, False, 1, normalize_err=True)
     Y = ssm.fit_predict(D)
     assert Y.any()
-    assert False

@@ -18,6 +18,7 @@ cdef class Model(object):
     cdef double gamma
     cdef double std
     cdef int m
+    cdef bool normalize_err
 
     cdef double[:] y
     cdef double[:] b

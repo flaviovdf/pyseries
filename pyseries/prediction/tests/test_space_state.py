@@ -115,3 +115,12 @@ def test_fit_predict_dataset():
     ssm = SSM(False, False, 1)
     Y = ssm.fit_predict(D)
     assert Y.any()
+    
+def test_fit_predict_normalize():
+    '''Tests with dataset'''
+    
+    D = tsio.from_id_row_mat(YOUTUBE_1K, add_eps=1e-2)
+    ssm = SSM(False, False, 1, normalize_err=True)
+    Y = ssm.fit_predict(D)
+    assert Y.any()
+    assert False

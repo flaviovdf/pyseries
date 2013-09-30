@@ -16,13 +16,15 @@ import numpy as np
 
 class SSM(BaseEstimator, RegressorMixin):
     
-    def __init__(self, trend=False, period=False, steps_ahead=1, n_walks=5):
+    def __init__(self, trend=False, period=False, steps_ahead=1, n_walks=5,
+                 normalize_err=False):
         self.P = None
         self.T = None
         self.trend = trend
         self.period = period
         self.steps_ahead = steps_ahead
         self.n_walks = n_walks
+        self.normalize_err = normalize_err
     
     def fit_predict(self, X):
 
@@ -39,7 +41,7 @@ class SSM(BaseEstimator, RegressorMixin):
         bounds = [(None, None), (None, None), (None, None), (None, None), 
                   (0, None)]
         for i in xrange(X.shape[0]):
-            model = Model()
+            model = Model(self.normalize_err)
             fmin_l_bfgs_b(func=model, x0=init_params,
                     approx_grad=True, bounds=bounds,
                     args=(X[i], self.trend, self.period))

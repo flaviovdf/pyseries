@@ -30,7 +30,7 @@ def estimate_period(x, threshold):
 
 cdef class Model(object):
     
-    def __init__(self):
+    def __init__(self, bool normalize_err=False):
         self.min_err = np.inf
         self.alpha = 0
         self.beta = 0
@@ -41,6 +41,7 @@ cdef class Model(object):
         self.b = None
         self.l = None
         self.s = None
+        self.normalize_err = normalize_err
     
     def __call__(self, double[:] params, double[:] x, bool trend=False, 
             bool period=False, double period_threshold=0.5):
@@ -97,8 +98,11 @@ cdef class Model(object):
                     
             l[i] = l[i - 1] + b[i - 1] + alpha * noise[i]
             b[i] = b[i - 1] + beta * noise[i]
-        
-            ssq_err += (x[i] - y[i]) * (x[i] - y[i])
+            
+            if self.normalize_err:
+                ssq_err += (1 - y[i] / x[i]) * (1 - y[i] / x[i])
+            else:
+                ssq_err += (x[i] - y[i]) * (x[i] - y[i])
         
         if ssq_err < self.min_err:
             self.min_err = np.inf

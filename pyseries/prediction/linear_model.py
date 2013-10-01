@@ -43,8 +43,8 @@ def mrse_transform(X, y):
     y_new : array of shape = [n_samples]
         Array of ones
     '''
-    X = np.asanyarray(X, dtype='f')
-    y = np.asanyarray(y, dtype='f')
+    X = np.asanyarray(X, dtype='d')
+    y = np.asanyarray(y, dtype='d')
 
     if y.ndim > 1:
         raise ShapeException('y must have a single dimension')
@@ -114,7 +114,7 @@ class RidgeRBFModel(BaseEstimator, RegressorMixin):
         X = np.asanyarray(X, dtype='d')
 
         if self.R is not None:
-            D = np.exp(-cdist(X, self.R) / (2 * (self.sigma ** 2)))
+            D = np.exp((-cdist(X, self.R) ** 2) / (2 * (self.sigma ** 2)))
             X = np.hstack((X, D))
 
         return self.model.predict(X)

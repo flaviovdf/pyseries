@@ -25,7 +25,7 @@ def test_mrse_transform():
 
 def test_rbf_model():
     '''Tests the RBF model'''
-    rbf_model = RidgeRBFModel(10, .5, .01)
+    rbf_model = RidgeRBFModel(100, 50, .00001)
     D = tsio.from_id_row_mat(YOUTUBE_1K, add_eps=1e-6).np_like_firstn()
     
     X_train = D[:500, :7]
@@ -38,6 +38,7 @@ def test_rbf_model():
     y_pred = model.predict(X_test)
     
     mrse = (((y_test - y_pred) / y_test)**2).mean()
+    print(mrse)
     assert_equal(1, mrse > 0)
     assert_equal(1, mrse < 1)
 
@@ -50,7 +51,7 @@ def test_rbf_with_dataset():
     model = rbf_model.fit(D, y)
     y_pred = model.predict(D)
     mrse = (((y - y_pred) / y)**2).mean()
-    assert_almost_equal(0, mrse, 5)
+    assert_almost_equal(0, mrse, 4)
     
 def test_ml_model():
     '''Tests the ML model'''

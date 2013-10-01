@@ -99,7 +99,7 @@ class RidgeRBFModel(BaseEstimator, RegressorMixin):
             rand_idx = np.random.choice(X.shape[0], num_dists, replace=False)
             self.R = X[rand_idx]
             
-            D = np.exp(-cdist(X, self.R) / (2 * (self.sigma ** 2)))
+            D = np.exp(-1.0 * ((cdist(X, self.R) ** 2) / (2 * (self.sigma ** 2))))
             X = np.hstack((X, D))
 
         X, y = mrse_transform(X, y)        
@@ -114,7 +114,7 @@ class RidgeRBFModel(BaseEstimator, RegressorMixin):
         X = np.asanyarray(X, dtype='d')
 
         if self.R is not None:
-            D = np.exp((-cdist(X, self.R) ** 2) / (2 * (self.sigma ** 2)))
+            D = np.exp(-1.0 * ((cdist(X, self.R) ** 2) / (2 * (self.sigma ** 2))))
             X = np.hstack((X, D))
 
         return self.model.predict(X)

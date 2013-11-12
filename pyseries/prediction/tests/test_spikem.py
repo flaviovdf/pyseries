@@ -135,8 +135,6 @@ def test_one_series():
     pred = SpikeM(0).fit_predict(y, [24], True)
 
     #from matplotlib import pyplot as plt
-    #print(pred)
-    #print(y)
     #x = range(y.shape[1])
     #plt.plot(x, y[0])
     #plt.plot(x, pred[0])

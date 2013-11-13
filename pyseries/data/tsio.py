@@ -28,9 +28,13 @@ def from_id_row_mat(matrix_fpath, skip_first_col=True, add_eps=0):
     -------
     a time series dataset object
     '''
+    X = np.genfromtxt(matrix_fpath, dtype='d')
+    if X.ndim == 1:
+        X = X[None]
     
     from_ = int(skip_first_col)
-    X = np.genfromtxt(matrix_fpath, dtype='d')[:, from_:] + add_eps
+    X = X[:, from_:]
+    X += add_eps
     
     n, f = X.shape
     tseries = []

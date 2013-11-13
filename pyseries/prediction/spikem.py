@@ -107,8 +107,13 @@ def fit_one(tseries, period, num_iter=100):
     def mse_func(param_value, parameter_idx, all_parameters):
         predicted = spikem_wrapper(param_value, parameter_idx, all_parameters,
                 tseries.shape[0])
-        mse = ((predicted - tseries) ** 2).sum()
-        return np.sqrt(mse)
+        
+        try:
+            sqerr = (predicted - tseries) ** 2
+            mse = sqerr.sum()
+            return np.sqrt(mse)
+        except FloatingPointError: #overflow
+            return float('inf')
 
     for i in range(num_iter):
         for param_name in TO_FIT:
@@ -121,7 +126,12 @@ def fit_one(tseries, period, num_iter=100):
                 for i in xrange(st, ed + 1):
                     curr_params[param_idx] = i
                     predicted = spikem(curr_params, tseries.shape[0])
-                    mse = ((tseries - predicted) ** 2).sum()
+                    
+                    try:
+                        mse = ((tseries - predicted) ** 2).sum()
+                    except FloatingPointError: #overflow
+                        mse = float('inf')
+
                     if mse < min_mse:
                         best = i
             else:
@@ -154,8 +164,9 @@ class SpikeM(BaseEstimator, RegressorMixin):
         assert period_frequencies.shape[0] == n
         
         P = np.zeros(shape=(n, TOTAL_PARAMS), dtype='d')
-        for i in xrange(X.shape[0]):
-            P[i] = fit_one(X[i], period_frequencies[i])
+        with np.errstate(over='raise'):
+            for i in xrange(X.shape[0]):
+                P[i] = fit_one(X[i], period_frequencies[i])
         
         if full_series:
             Y = np.zeros((n, X.shape[1] + self.steps_ahead), dtype='d')

@@ -21,10 +21,12 @@ def estimate_period(x, threshold):
     acf /= acf[0]
     acf = acf[1:] #first position is always 1, ignore
     
-    argmx = acf.argmax()
+    candidates_mask = acf > threshold
     period = 0
-    if acf[argmx] > threshold:
-        period = argmx + 1
+    if candidates_mask.any():
+        #-1 is the largest possible period with autocorrelation
+        candidate_idx = np.where(acf > threshold)[0]
+        period = candidate_idx[candidate_idx.shape[0] - 1] + 1
 
     return period
 

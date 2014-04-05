@@ -104,8 +104,7 @@ cdef class Model(object):
             if self.normalize_err:
                 ssq_err += (1 - y[i] / x[i]) * (1 - y[i] / x[i])
             else:
-                if x[i] > 0 and y[i] > 0:
-                    ssq_err += (np.log(x[i]) - np.log(y[i])) * (np.log(x[i]) - np.log(y[i]))
+                ssq_err += (x[i] - y[i]) * (x[i] - y[i])
         
         if ssq_err < self.min_err:
             self.min_err = np.inf

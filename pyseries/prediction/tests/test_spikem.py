@@ -134,12 +134,13 @@ def test_one_series():
     y = tsio.from_id_row_mat(SM_ONE_SEQUENCE, add_eps=1e-2).np_like_firstn()
     pred = SpikeM(0).fit_predict(y, [24], True)
 
-    #from matplotlib import pyplot as plt
-    #x = range(y.shape[1])
-    #plt.plot(x, y[0])
-    #plt.plot(x, pred[0])
-    #plt.show()
+    from matplotlib import pyplot as plt
+    x = range(y.shape[1])
+    plt.plot(x, y[0])
+    plt.plot(x, pred[0])
+    plt.show()
     rmse = np.sqrt((pred[0] - y[0]) ** 2).sum() / len(y[0])
+    print(rmse)
     assert rmse < 8
     
 def test_fit_predict():

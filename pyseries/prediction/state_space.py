@@ -26,7 +26,7 @@ class SSM(BaseEstimator, RegressorMixin):
         self.n_walks = n_walks
         self.normalize_err = normalize_err
     
-    def fit_predict(self, X):
+    def fit_predict(self, X, full_series=False):
 
         if not isinstance(X, TimeSeriesDataset):
             X = np.asanyarray(X, dtype='d')
@@ -34,12 +34,17 @@ class SSM(BaseEstimator, RegressorMixin):
             X = X.np_like_firstn()
         
         num_params = 5
-        init_params = np.zeros(num_params, dtype='d')
+        init_params = np.random.rand(num_params)
         init_params[-1] = 1e-20
-        n = X.shape[0]
-        Y = np.zeros(shape=(n, self.steps_ahead), dtype='d')
+        n, ticks = X.shape
+
+        if not full_series:
+            Y = np.zeros(shape=(n, self.steps_ahead), dtype='d')
+        else:
+            Y = np.zeros(shape=(n, ticks + self.steps_ahead), dtype='d')
+        
         bounds = [(None, None), (None, None), (None, None), (None, None), 
-                  (0, None)]
+                (0, None)]
         for i in xrange(X.shape[0]):
             model = Model(self.normalize_err)
             fmin_l_bfgs_b(func=model, x0=init_params,
@@ -47,7 +52,7 @@ class SSM(BaseEstimator, RegressorMixin):
                     args=(X[i], self.trend, self.period),
                     iprint=-1)
             for _ in xrange(self.n_walks):
-                y = np.asarray(model.walk(self.steps_ahead))
+                y = np.asarray(model.walk(self.steps_ahead, full_series))
                 Y[i] += y
         Y /= self.n_walks
         return Y

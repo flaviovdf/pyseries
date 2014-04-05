@@ -104,7 +104,8 @@ cdef class Model(object):
             if self.normalize_err:
                 ssq_err += (1 - y[i] / x[i]) * (1 - y[i] / x[i])
             else:
-                ssq_err += (x[i] - y[i]) * (x[i] - y[i])
+                if x[i] > 0 and y[i] > 0:
+                    ssq_err += (np.log(x[i]) - np.log(y[i])) * (np.log(x[i]) - np.log(y[i]))
         
         if ssq_err < self.min_err:
             self.min_err = np.inf
@@ -121,15 +122,20 @@ cdef class Model(object):
         
         return ssq_err
     
-    def walk(self, int n_steps):
+    def walk(self, int n_steps, bool full_history=False):
         
         cdef Py_ssize_t n = self.y.shape[0]
         
-        cdef double[:] y = np.zeros(n_steps + 1, dtype='d')
-        cdef double[:] b = np.zeros(n_steps + 1, dtype='d')
-        cdef double[:] l = np.zeros(n_steps + 1, dtype='d')
-        cdef double[:] s = np.zeros(n_steps + 1, dtype='d')
+        #at least 1 past tick is needed for prediction
+        cdef Py_ssize_t past_ticks = 1
+        if full_history:
+            past_ticks = n
         
+        cdef double[:] y = np.zeros(n_steps + past_ticks, dtype='d')
+        cdef double[:] b = np.zeros(n_steps + past_ticks, dtype='d')
+        cdef double[:] l = np.zeros(n_steps + past_ticks, dtype='d')
+        cdef double[:] s = np.zeros(n_steps + past_ticks, dtype='d')
+         
         cdef double alpha = self.alpha
         cdef double beta = self.beta
         cdef double d = self.d
@@ -137,20 +143,27 @@ cdef class Model(object):
         cdef double std = self.std
         cdef int m = self.m
         
-        y[0] = self.y[n - 1]
-        l[0] = self.l[n - 1]
-        b[0] = self.b[n - 1]
-        s[0] = self.s[n - 1]
+        cdef Py_ssize_t i
+        if full_history:
+            for i in range(n):
+                y[i] = self.y[i]
+                l[i] = self.l[i]
+                b[i] = self.b[i]
+                s[i] = self.s[i]
+        else:
+            y[0] = self.y[n - 1]
+            l[0] = self.l[n - 1]
+            b[0] = self.b[n - 1]
+            s[0] = self.s[n - 1]
         
         cdef double[:] noise
         
         if std > 0:
-            noise = np.random.normal(0.0, std, n_steps + 1)
+            noise = np.random.normal(0.0, std, y.shape[0])
         else:
-            noise = np.zeros(n_steps + 1)
+            noise = np.zeros(y.shape[0])
             
-        cdef Py_ssize_t i
-        for i in range(1, n_steps + 1):
+        for i in range(past_ticks, n_steps + past_ticks):
             if i >= m and m > 0:
                 y[i] = l[i - 1] + d * b[i - 1] + s[i - m] + noise[i]
                 s[i] = s[i - m] + gamma * noise[i]
@@ -161,4 +174,7 @@ cdef class Model(object):
             l[i] = l[i - 1] + b[i - 1] + alpha * noise[i]
             b[i] = b[i - 1] + beta * noise[i]
         
-        return y[1:]
+        if full_history:
+            return y
+        else:
+            return y[1:]

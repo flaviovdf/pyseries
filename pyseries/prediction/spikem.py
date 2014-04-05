@@ -69,8 +69,8 @@ def get_initial_parameters(tseries, period):
     bounds.append((0, tseries.shape[0]))
 
     #Sb
-    init_params[4] = tseries.min()
-    bounds.append((tseries.min(), tseries.max()))
+    init_params[4] = 0.1
+    bounds.append((0, tseries.max()))
 
     #err
     init_params[5] = 0.01
@@ -110,7 +110,7 @@ def fit_one(tseries, period, num_iter=100):
         
         try:
             sqerr = (predicted - tseries) ** 2
-            mse = sqerr.sum()
+            mse = sqerr.mean()
             return np.sqrt(mse)
         except FloatingPointError: #overflow
             return float('inf')
@@ -134,12 +134,14 @@ def fit_one(tseries, period, num_iter=100):
 
                     if mse < min_mse:
                         best = i
+                
+                curr_params[param_idx] = best
             else:
                 bound = bounds[param_idx]
                 best = leastsq(func=mse_func, x0=curr_params[param_idx],
                         args=(param_idx, curr_params))[0]
             
-            curr_params[param_idx] = best
+                curr_params[param_idx] = best
     
     return curr_params
  
@@ -148,7 +150,7 @@ class SpikeM(BaseEstimator, RegressorMixin):
     def __init__(self, steps_ahead=1):
         self.steps_ahead = steps_ahead
 
-    def fit_predict(self, X, period_frequencies=None, full_series=False):
+    def fit_predict(self, X, period_frequencies=None, full_series=False, num_iter=200):
 
         if not isinstance(X, TimeSeriesDataset):
             X = np.asanyarray(X, dtype='d')
@@ -166,7 +168,7 @@ class SpikeM(BaseEstimator, RegressorMixin):
         P = np.zeros(shape=(n, TOTAL_PARAMS), dtype='d')
         with np.errstate(over='raise'):
             for i in xrange(X.shape[0]):
-                P[i] = fit_one(X[i], period_frequencies[i])
+                P[i] = fit_one(X[i], period_frequencies[i], num_iter)
         
         if full_series:
             Y = np.zeros((n, X.shape[1] + self.steps_ahead), dtype='d')

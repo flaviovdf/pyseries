@@ -43,15 +43,15 @@ cdef double[:] _spikem(double[:] parameters, Py_ssize_t duration):
     cdef Py_ssize_t t = 0
     cdef double sum_ = 0
     cdef double curr_shock = 0
-    for n in range(duration - 1):
 
+    for n in range(duration - 1):
         sum_ = 0
         for t in range(nb, n + 1):
             if t == nb:
                 curr_shock = shock
             else:
                 curr_shock = 0
-
+        
             sum_ += (delta_informed[t] + curr_shock) * \
                     _decay(beta, tau, n+1 - t)
         

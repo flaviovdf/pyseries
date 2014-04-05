@@ -31,12 +31,15 @@ def test_fit_predict():
     D = D[: 50]
     ssm = SSM(True, True, 50)
     
+    D = (D.T / D.sum(axis=1)).T
+
     X_train = D[:, :50]
     X_test = D[:, 50:]
     
     Y = ssm.fit_predict(X_train)
     err = ((X_test - Y) ** 2).mean()
     assert_equal((50, 50), Y.shape)
+    print(err)
     assert err > 0
 
 

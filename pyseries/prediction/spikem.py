@@ -142,7 +142,7 @@ def fit_one(tseries, period, num_iter=20):
                     
                     try:
                         mse = np.sqrt(((predicted - tseries) ** 2).mean())
-                    except FloatingPointError: #overflow
+                    except: #overflow
                         mse = float('inf')
 
                     if mse < min_mse:
@@ -152,10 +152,13 @@ def fit_one(tseries, period, num_iter=20):
             else:
                 bound = bounds[param_idx]
                 lm_params = to_lmstyle(param_name, curr_params, bounds)
-                lmfit.minimize(mse_func, lm_params, \
-                        args=(param_name, curr_params))
-                curr_params[param_idx] = lm_params[param_name].value
-    
+                try:
+                    lmfit.minimize(mse_func, lm_params, \
+                            args=(param_name, curr_params))
+                    curr_params[param_idx] = lm_params[param_name].value
+                except: #overflow
+                    pass
+
     return curr_params
  
 class SpikeM(BaseEstimator, RegressorMixin):

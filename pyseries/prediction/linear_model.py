@@ -17,6 +17,7 @@ from scipy.spatial.distance import cdist
 from sklearn.base import BaseEstimator
 from sklearn.base import RegressorMixin
 
+from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
 
 def mrse_transform(X, y):
@@ -68,20 +69,21 @@ class RidgeRBFModel(BaseEstimator, RegressorMixin):
         number of distances to consider
     sigma : float
         smoothing in the rbf
-    alpha : float
-        ridge regression scaling parameter
     '''
 
-    def __init__(self, num_dists, sigma, alpha):
+    def __init__(self, num_dists=2, sigma=0.1, **kwargs):
         self.num_dists = num_dists
         self.sigma = sigma
-        self.alpha = alpha
+        self.base_kwags = kwargs
         self.R = None
         self.model = None
 
-    def fit(self, X, y):
+    def fit(self, X, y, base_learner=None):
         if isinstance(X, TimeSeriesDataset):
-            X = X.np_like_firstn() 
+            X = X.np_like_firstn()
+
+        if base_learner is None:
+            base_learner = Ridge
 
         X = np.asanyarray(X, dtype='d')
         y = np.asanyarray(y, dtype='d')
@@ -102,8 +104,8 @@ class RidgeRBFModel(BaseEstimator, RegressorMixin):
             D = np.exp(-1.0 * ((cdist(X, self.R) ** 2) / (2 * (self.sigma ** 2))))
             X = np.hstack((X, D))
 
-        X, y = mrse_transform(X, y)        
-        self.model = Ridge(self.alpha, fit_intercept=False)
+        X, y = mrse_transform(X, y)
+        self.model = base_learner(**self.base_kwags)
         self.model = self.model.fit(X, y)
         return self
 
@@ -124,5 +126,9 @@ class MLModel(RidgeRBFModel):
     Implements the MLModel by Pinto et al. 2013.
     '''
 
-    def __init__(self):
-        super(MLModel, self).__init__(0, 0, 1)
+    def __init__(self, **kwargs):
+        super(MLModel, self).__init__(0, 0, **kwargs)
+
+    def fit(self, X, y):
+        super(MLModel, self).fit(X, y, LinearRegression)
+        return self

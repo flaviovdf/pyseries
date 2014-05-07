@@ -25,7 +25,7 @@ def test_mrse_transform():
 
 def test_rbf_model():
     '''Tests the RBF model'''
-    rbf_model = RidgeRBFModel(100, 50, alpha=.00001, fit_intercept=False)
+    rbf_model = RidgeRBFModel(100, 50, alpha=.00001)
     D = tsio.from_id_row_mat(YOUTUBE_1K, add_eps=1e-6).np_like_firstn()
     
     X_train = D[:500, :7]
@@ -44,7 +44,7 @@ def test_rbf_model():
 
 def test_rbf_with_dataset():
     '''Tests the RBF model with TimeSeriesDataset'''
-    rbf_model = RidgeRBFModel(10, .5, alpha=.01, fit_intercept=False)
+    rbf_model = RidgeRBFModel(10, .5, alpha=.01)
     D = tsio.from_id_row_mat(YOUTUBE_1K, add_eps=1e-6)
     y = D.np_like_firstn().sum(axis=1)
     
@@ -55,7 +55,7 @@ def test_rbf_with_dataset():
     
 def test_ml_model():
     '''Tests the ML model'''
-    ml_model = MLModel(fit_intercept=False)
+    ml_model = MLModel()
     D = tsio.from_id_row_mat(YOUTUBE_1K, add_eps=1e-6).np_like_firstn()
     D += 1e-6
     

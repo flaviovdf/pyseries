@@ -71,19 +71,23 @@ class RidgeRBFModel(BaseEstimator, RegressorMixin):
         smoothing in the rbf
     '''
 
-    def __init__(self, num_dists=2, sigma=0.1, **kwargs):
+    def __init__(self, num_dists=2, sigma=0.1, base_learner=None, **kwargs):
         self.num_dists = num_dists
         self.sigma = sigma
-        self.base_kwags = kwargs
+        
+        if base_learner is None:
+            base_learner = Ridge
+        
+        if 'fit_intercept' not in kwargs:
+            kwargs['fit_intercept'] = False
+
+        self.base_learner = base_learner(**kwargs)
         self.R = None
         self.model = None
 
-    def fit(self, X, y, base_learner=None):
+    def fit(self, X, y):
         if isinstance(X, TimeSeriesDataset):
             X = X.np_like_firstn()
-
-        if base_learner is None:
-            base_learner = Ridge
 
         X = np.asanyarray(X, dtype='d')
         y = np.asanyarray(y, dtype='d')
@@ -105,8 +109,7 @@ class RidgeRBFModel(BaseEstimator, RegressorMixin):
             X = np.hstack((X, D))
 
         X, y = mrse_transform(X, y)
-        self.model = base_learner(**self.base_kwags)
-        self.model = self.model.fit(X, y)
+        self.model = self.base_learner.fit(X, y)
         return self
 
     def predict(self, X):
@@ -127,8 +130,8 @@ class MLModel(RidgeRBFModel):
     '''
 
     def __init__(self, **kwargs):
-        super(MLModel, self).__init__(0, 0, **kwargs)
+        super(MLModel, self).__init__(0, 0, LinearRegression, **kwargs)
 
     def fit(self, X, y):
-        super(MLModel, self).fit(X, y, LinearRegression)
+        super(MLModel, self).fit(X, y)
         return self
